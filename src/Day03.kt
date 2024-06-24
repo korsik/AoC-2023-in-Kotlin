@@ -1,79 +1,69 @@
 fun main() {
 
     data class Numbers(var value: Int, val location: List<Int>, val row: Int)
-    data class Symbols(val symbol: String, val point: Int, val row: Int)
+    data class Symbols(val value: String, val point: Int, val row: Int)
 
+    val numbers = mutableListOf<Numbers>()
+    val symbols = mutableListOf<Symbols>()
 
-    fun part1(input: List<String>): Int {
-        var result = 0
-        val numbers = mutableListOf<Numbers>()
-        val symbols = mutableListOf<Symbols>()
+    fun traverseInput(input: List<String>) {
         input.forEach { line ->
             val row = input.indexOf(line)
             Regex("[0-9]+").findAll(line)
-                .map(MatchResult::value)
-                .toList()
-                .map {
+                .forEach { matchResult ->
+                    val matchValue = matchResult.value
+                    val matchIndex = matchResult.range.first
                     numbers.add(
-                        Numbers(it.toInt(),
-                            ((line.indexOf(it) - 1)..(line.indexOf(it) + it.length)).toList(),
+                        Numbers(matchValue.toInt(),
+                            ((matchIndex - 1)..(matchIndex + matchValue.length)).toList(),
                             row
-                            )
+                        )
                     )
                 }
             Regex("""[\p{P}\p{S}&&[^.]]+""").findAll(line)
-                .map(MatchResult::value)
-                .toList()
-                .map {
+                .forEach { matchResult ->
+                    val matchValue = matchResult.value
+                    val matchIndex = matchResult.range.first
                     symbols.add(
-                        Symbols(it, line.indexOf(it), row)
+                        Symbols(matchValue, matchIndex, row)
                     )
                 }
         }
-        println(numbers.size)
-        // Check for adjacent
-        var num = mutableListOf<Int>()
-        var sum = 0
-//        symbols.sortBy { it.row }
-        symbols.forEach { symbol ->
-            var check = false
-            numbers.forEachIndexed { index, number ->
-                println("The Line location Symbol ${symbol.point} -> Number ${number.location}")
-                println("The row position Symbol ${symbol.row} -> Number ${number.row}")
-                if(symbol.row == 2) {
-                    println("Yes")
-                }
-                    if ((symbol.point in number.location) and
-                        (symbol.row in (number.row - 1)..(number.row + 1))
-                    ) {
-                        sum += 1
-                        num.add(index)
-//                        println(number.value)
-                        result += number.value
-//                        number.value = 0
-                        check = true
-//                        return@symb
-                    }
+    }
+
+    fun part1(input: List<String>): Int {
+        var result = 0
+        traverseInput(input)
+
+        numbers.forEach { number ->
+            val sym = symbols.filter { symbol -> symbol.point in number.location &&
+                    symbol.row in (number.row - 1)..(number.row + 1)
             }
-            if(check) {
-//                println("Checking ${num.size} numbers")
-                num.forEach {
-                    numbers.removeAt(it)
-                }
-                num.clear()
+            if(sym.isNotEmpty()) {
+                result += number.value
             }
         }
-
-        println("The numbers list size is ${numbers.size}")
-        println(sum)
         return result
     }
 
     fun part2(input: List<String>): Int {
         var result = 0
+        traverseInput(input)
 
-        input.forEach { line ->
+        symbols.filter { it.value == "*" }
+            .toSet()
+            .forEach {
+            symbol ->
+            val nums = numbers.filter { number -> symbol.point in number.location &&
+                    symbol.row in (number.row - 1)..(number.row + 1)
+            }.toSet()
+            if (nums.size == 2) {
+
+                result += nums.elementAt(0).value * nums.elementAt(1).value
+            }
+
         }
+
         return result
     }
 
@@ -82,20 +72,8 @@ fun main() {
 
     }
 
-    // 1197 numbers and 730 symbols
-
-    // 143 numbers should be left out
-
-    //548033, 291365,
-
-    // 531932 with 1054
-
-//    233823
-//    392612
-
     val input = readInput("input")
 
     part1(input).println()
-//    Day03(input).solvePart1()
     part2(input).println()
 }
