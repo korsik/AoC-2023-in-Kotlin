@@ -67,7 +67,7 @@ fun main() {
         return result
     }
 
-//    val testInput = readInput("test_input")
+//    val testInput = readInput("test_input.txt")
 
 
     val input = readInput("input")
